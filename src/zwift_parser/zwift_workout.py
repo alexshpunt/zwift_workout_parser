@@ -8,8 +8,40 @@ class ZWorkoutParseMode(Enum):
     DEFAULT = 1
     SKIP = 2 
     REPLACE = 3 
-
+    
 class ZWorkout(): 
+    def parse_values(article: element.Tag):
+        breadcrumbs = article.select_one('div.breadcrumbs')
+        return breadcrumbs.find('h4')['class']
+
+    def is_bike_workout(article: element.Tag):
+        """Checks if the parsed workout is a bike workout
+
+        Parameters 
+        ----------
+        class_values : List[str]
+                    A list of the class values on the workout's html page         
+        """
+        class_values = ZWorkout.parse_values(article)
+        return len([s for s in class_values if 'bike' in s]) > 0
+
+    def is_run_workout(article: element.Tag):
+        """Checks if the parsed workout is a run workout
+
+        Parameters 
+        ----------
+        class_values : List[str]
+                    A list of the class values on the workout's html page         
+        """
+
+        class_values = ZWorkout.parse_values(article)
+        return len([s for s in class_values if 'run' in s]) > 0
+
+class ZRunWorkout():
+    def __init__(self, article: element.Tag, mode: ZWorkoutParseMode = ZWorkoutParseMode.DEFAULT) -> None:
+        pass
+
+class ZBikeWorkout(): 
     def is_valid_sport_type(class_values: List[str]):
         """Checks if workout's sport type is supported by the parser
 
@@ -32,18 +64,18 @@ class ZWorkout():
         ------
         ZFreeRide - If the raw interval string contains a 'free ride' sub-string in it
                     for example '10 min free ride'
-        ZRangedInterval - If the raw interval string contains a 'from','to' pair of the sub-strings
+        ZBikeRangedInterval - If the raw interval string contains a 'from','to' pair of the sub-strings
                     for example '1 min from 50 to 90% FTP' 
         ZIntervalT - If the raw interval string contains a 'x' symbol (meaning times)
                     for example '10x 3min @ 100% FTP, 1 min @ 55% FTP'
-        ZSteadyState - Otherwise
+        ZBikeSteadyState - Otherwise
                     for example '3min @ 100rpm, 95% FTP'
         """
 
         if 'free ride' in raw_str: return ZFreeRide(raw_str) #10min free ride 
-        if 'from' in raw_str and 'to' in raw_str: return ZRangedInterval(raw_str) #1min from 50 to 90% FTP
-        if 'x' in raw_str: return ZIntervalsT(raw_str) #10x 3min @ 100% FTP, 1min @ 55% FTP
-        return ZSteadyState(raw_str) #3min @ 100rpmm, 95% FTP
+        if 'from' in raw_str and 'to' in raw_str: return ZBikeRangedInterval(raw_str) #1min from 50 to 90% FTP
+        if 'x' in raw_str: return ZBikeIntervalsT(raw_str) #10x 3min @ 100% FTP, 1min @ 55% FTP
+        return ZBikeSteadyState(raw_str) #3min @ 100rpmm, 95% FTP
 
     def __init__(self, article: element.Tag, mode: ZWorkoutParseMode = ZWorkoutParseMode.DEFAULT) -> None:
         self.path, self.filename = (None, None)
@@ -51,7 +83,7 @@ class ZWorkout():
         breadcrumbs = article.select_one('div.breadcrumbs')
         sport_type = breadcrumbs.find('h4')['class']
 
-        self.valid = ZWorkout.is_valid_sport_type(sport_type)
+        self.valid = ZBikeWorkout.is_valid_sport_type(sport_type)
         if not self.valid: return 
         
         try: 
@@ -81,7 +113,7 @@ class ZWorkout():
             data = article.select_one('div.one-third.column.workoutlist')
             for div in data.find_all('div'):
                 interval = "".join([convert_to_string(c) for c in div.contents]) 
-                self.intervals.append(ZWorkout.parse_interval(interval))
+                self.intervals.append(ZBikeWorkout.parse_interval(interval))
 
         overview = article.select_one('div.overview')
         self.author = 'Zwift Workouts Parser'

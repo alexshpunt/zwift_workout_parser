@@ -37,7 +37,8 @@ def parse_duration(row: str) -> int:
         seconds += int(filter_digits(sec))
     return seconds
 
-class ZSteadyState: 
+
+class ZBikeSteadyState: 
     def __init__(self, row: str) -> None:
         duration, row = [r.strip() for r in row.split('@')]
         duration = parse_duration(duration)
@@ -62,7 +63,7 @@ class ZSteadyState:
         if self.cadence > 0: interval.set('Cadence', str(self.cadence))
         return interval 
 
-class ZRangedInterval(): 
+class ZBikeRangedInterval(): 
     def __init__(self, row: str) -> None:
         duration, row = row.split('from')
         cadence = -1
@@ -95,11 +96,11 @@ class ZRangedInterval():
         interval.set("PowerHigh", str(self.to_power))
         if self.cadence > 0: interval.set('Cadence', str(self.cadence))
 
-class ZIntervalsT(): 
+class ZBikeIntervalsT(): 
     def __init__(self, row: str): 
         number, rest =  row.split('x')
         rest = rest.replace("rpm,", 'rpm')
-        first_interval, second_interval = [ZSteadyState(r) for r in rest.split(',')]
+        first_interval, second_interval = [ZBikeSteadyState(r) for r in rest.split(',')]
         self.number = number 
         self.first_interval = first_interval 
         self.second_interval = second_interval 

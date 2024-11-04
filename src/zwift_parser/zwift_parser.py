@@ -1,8 +1,8 @@
-from zwift_workout import ZWorkout, ZWorkoutParseMode
+from zwift_workout import ZWorkout, ZBikeWorkout, ZWorkoutParseMode
 
 class Parser:
     """
-    A class is used to parse any **bike** zwift workout, presented on the 
+    A class is used to parse any zwift workout, presented on the 
     www.whatsonzwift.com
     """
 
@@ -49,7 +49,7 @@ class Parser:
             if not card_sports: continue
 
             card_classes = card_sports.i['class']
-            valid = ZWorkout.is_valid_sport_type(card_classes) 
+            valid = ZBikeWorkout.is_valid_sport_type(card_classes) 
             url = plan_data.find('a', class_='button')['href']
 
             if not valid: 
@@ -73,7 +73,12 @@ class Parser:
             mode = ZWorkoutParseMode.DEFAULT
             if self.skip: mode = ZWorkoutParseMode.SKIP
             elif self.replace: mode = ZWorkoutParseMode.REPLACE
-            ZWorkout(workout_data, mode).save(self.export_dir)
+
+            if ZWorkout.is_bike_workout(workout_data):
+                ZBikeWorkout(workout_data, mode).save(self.export_dir)
+            elif ZWorkout.is_run_workout(workout_data):
+                print(f"Found a run workout!")
+
         return True 
 
     def __get_web_content(url, tag, tag_class):
